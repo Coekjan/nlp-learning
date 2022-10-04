@@ -3,6 +3,7 @@ import math
 from typing import Dict, List, Set
 
 import numpy as np
+from seqeval.metrics import classification_report
 
 tag_text: Dict[str, str] = {
     'address': 'ADDRESS',
@@ -156,15 +157,6 @@ def viterbi(line: List[int],
     return res_prob, res_path
 
 
-def evaluate(tp: Dict[str, int], fp: Dict[str, int], fn: Dict[str, int]) -> None:
-    print('%15s %-12s %-12s %-12s' % ('', 'PRECISION', 'RECALL', 'F1-SCORE'))
-    for tag in tag_text.keys():
-        precision = tp[tag] / (tp[tag] + fp[tag])
-        recall = tp[tag] / (tp[tag] + fn[tag])
-        f1_score = 2 * precision * recall / (precision + recall)
-        print('%-15s %.10f %.10f %.10f' % (tag, precision, recall, f1_score))
-
-
 if __name__ == '__main__':
     __train_data = read_data('train.json')
     init_hmm(__train_data)
@@ -174,28 +166,15 @@ if __name__ == '__main__':
         (emission_prob, np.zeros(shape=(len(tag_dict), __cur_word_list_len - np.shape(emission_prob)[1]))),
         axis=1
     )
-    __tp, __fp, __fn = {}, {}, {}
     __back_tag = {}
-    __back_str = {}
-    for s, t in tag_text.items():
-        __tp[s] = 0
-        __fp[s] = 0
-        __fn[s] = 0
-        __back_str[t] = s
     for t, i in tag_dict.items():
-        if i != 0:
-            __back_tag[i] = __back_str[t[2:]]
+        __back_tag[i] = t
+    __paths = []
+    __trues = []
     for __data in __dev_data:
         __text_index = list(map(lambda c: word_list.index(c), __data['text']))
         # noinspection PyTypeChecker
         __prob, __path = viterbi(__text_index, init_prob, transition_prob, __fixed_emission_prob)
-        for i in range(len(__path)):
-            if __path[i] != 0:
-                if __data['tags'][i] == __path[i]:
-                    __tp[__back_tag[__path[i]]] += 1
-                else:
-                    __fp[__back_tag[__path[i]]] += 1
-            else:
-                if __data['tags'][i] != 0:
-                    __fn[__back_tag[__data['tags'][i]]] += 1
-    evaluate(__tp, __fp, __fn)
+        __paths.append(list(map(lambda v: __back_tag[v], __path)))
+        __trues.append(list(map(lambda v: __back_tag[v], __data['tags'])))
+    print(classification_report(__trues, __paths))
