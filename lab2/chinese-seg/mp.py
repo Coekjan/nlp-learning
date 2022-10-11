@@ -68,4 +68,4 @@ if __name__ == '__main__':
           'F_1 = %.5f' % __mp.evaluate(__seg, __gold))
     __stopwords = utils.read_dict('stopwords.txt')
     __flatten_seg = [__word for __sublist in __seg for __word in __sublist]
-    utils.make_word_cloud('corpus_mp.jpg', __stopwords, __flatten_seg)
+    utils.make_word_cloud('../wordcloud/corpus_mp.jpg', __stopwords, __flatten_seg)
