@@ -64,7 +64,6 @@ if __name__ == '__main__':
     __seg = []
     for __i in range(len(__text)):
         __seg_res = __bm.do_seg(__text[__i])
-        print(__seg_res)
         __seg.append(__seg_res)
     assert len(__seg) == len(__gold)
     print('P   = %.5f\n'
